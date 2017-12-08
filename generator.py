@@ -11,6 +11,7 @@ class TemplateGenerator:
         self.log_level = log_level
         self.out_path = out_path
         self.region = region
+        self.s3_website = "https://s3-{}.amazonaws.com/{}/".format(self.region, self.bucket)
         self.bucket_conn = self.s3_bucket()
         self.obj_dict = {}
         self.template_gen()
@@ -34,8 +35,14 @@ class TemplateGenerator:
                 obj_file = obj.key.split("/")
                 obj_album = obj_file[1]
                 obj_key = obj_file[2]
+                obj_url = self.s3_website + obj_full_path.replace(" ", "+")
+                obj_thumb_url = obj_url.split("/")
+                obj_thumb_url[4] = "thumbs"
+                obj_thumb_url = "/".join(obj_thumb_url)
                 try:
-                    self.obj_dict[obj_album]["keys"].append({obj_key: "url"})
+                    self.obj_dict[obj_album]["keys"].append({obj_key: {"obj_full_path": obj_full_path},
+                                                                       "obj_url": obj_url,
+                                                                       "obj_thumb_url": obj_thumb_url})
                 except KeyError:
                     self.obj_dict.update({obj_album: {"keys":[obj_key]}})
             else:
@@ -44,7 +51,7 @@ class TemplateGenerator:
         return self.obj_dict
 
     def template_gen(self):
-        print(self.parse_objects())
+        template_dict = self.parse_objects()
 
 
 def main():
