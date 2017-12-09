@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
+from textwrap import dedent
 import argparse
 import boto3
 import sys
@@ -66,7 +67,7 @@ class TemplateGenerator:
                 pass
             else:
                 index = self.make_index(album)
-                # self.write_index_file(index)
+                self.write_index_file(album, index)
 
 
     def album_check(self, album):
@@ -101,24 +102,34 @@ class TemplateGenerator:
             thumb_path = key["obj_thumb_url"]
             photo_title = key["key"]
 
+            # Using four curly brace so format doesn't try to replace it
             add_body = """
-                        {{< photo full=\"{0}\"
+                        {{{{< photo full=\"{0}\"
                         thumb = \"{1}\" alt = \"{2}\"
-                        phototitle = \"{2}\" >}}
+                        phototitle = \"{2}\" >}}}}
                         """.format(full_path, thumb_path, photo_title)
 
             body = body + add_body
 
-        print(body)
+        # Need to remove all indentations caused by python multiline strs
+        index = header + body
+        index = index.splitlines()
+        index = [x.strip() for x in index]
+        index = "\n".join(index)
 
-    def write_index_file(self, index):
+        return index
+
+    def write_index_file(self, album, index):
         """
         Creates album directory if not exists, then writes the _index.md to disk
         :param index: Text that needs to be in _index.md
         :return: nothing
         """
-        pass
-
+        path = self.out_path + "/" + album + "/_index.md"
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            index = dedent(index)
+            f.writelines(index)
 
     # TODO: Need to implement update to index if I add additional pictures to albums
     def update_index(self):
