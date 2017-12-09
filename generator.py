@@ -45,13 +45,15 @@ class TemplateGenerator:
                 obj_thumb_url[4] = "thumbs"
                 obj_thumb_url = "/".join(obj_thumb_url)
                 try:
-                    self.obj_dict[obj_album]["keys"].append({obj_key: {"obj_full_path": obj_full_path},
-                                                                       "obj_url": obj_url,
-                                                                       "obj_thumb_url": obj_thumb_url})
+                    self.obj_dict[obj_album]["keys"].append({"key": obj_key,
+                                                             "obj_full_path": obj_full_path,
+                                                             "obj_url": obj_url,
+                                                             "obj_thumb_url": obj_thumb_url})
                 except KeyError:
-                    self.obj_dict.update({obj_album: {"keys": [{obj_key: {"obj_full_path": obj_full_path},
-                                                                         "obj_url": obj_url,
-                                                                         "obj_thumb_url": obj_thumb_url}]}})
+                    self.obj_dict.update({obj_album: {"keys": [{"key": obj_key,
+                                                                "obj_full_path": obj_full_path,
+                                                                "obj_url": obj_url,
+                                                                "obj_thumb_url": obj_thumb_url}]}})
             else:
                 pass
 
@@ -64,7 +66,7 @@ class TemplateGenerator:
                 pass
             else:
                 index = self.make_index(album)
-                self.write_index_file(index)
+                # self.write_index_file(index)
 
 
     def album_check(self, album):
@@ -91,7 +93,23 @@ class TemplateGenerator:
                 date = \"{1}\"
                 title = \"{2}\"
                 +++""".format(albumthumb, date, album)
-        print(header)
+
+        body = ""
+
+        for key in self.obj_dict[album]["keys"]:
+            full_path = key["obj_url"]
+            thumb_path = key["obj_thumb_url"]
+            photo_title = key["key"]
+
+            add_body = """
+                        {{< photo full=\"{0}\"
+                        thumb = \"{1}\" alt = \"{2}\"
+                        phototitle = \"{2}\" >}}
+                        """.format(full_path, thumb_path, photo_title)
+
+            body = body + add_body
+
+        print(body)
 
     def write_index_file(self, index):
         """
