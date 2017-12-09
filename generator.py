@@ -89,11 +89,7 @@ class TemplateGenerator:
         """
         albumthumb = self.obj_dict[album]["keys"][0]["obj_thumb_url"]
         date = datetime.now().strftime("%Y-%m-%d")
-        header = """+++
-                albumthumb = \"{0}\"
-                date = \"{1}\"
-                title = \"{2}\"
-                +++""".format(albumthumb, date, album)
+        header = "+++\nalbumthumb = \"{0}\"\ndate = \"{1}\"\ntitle = \"{2}\"\n+++\n".format(albumthumb, date, album)
 
         body = ""
 
@@ -103,19 +99,17 @@ class TemplateGenerator:
             photo_title = key["key"]
 
             # Using four curly brace so format doesn't try to replace it
-            add_body = """
-                        {{{{< photo full=\"{0}\"
-                        thumb = \"{1}\" alt = \"{2}\"
-                        phototitle = \"{2}\" >}}}}
-                        """.format(full_path, thumb_path, photo_title)
+            add_body = "{{{{< photo full=\"{0}\" thumb=\"{1}\" alt=\"{2}\" phototitle=\"{2}\" description=\"{2}\" >}}}}\n".format(full_path, thumb_path, photo_title)
 
             body = body + add_body
 
         # Need to remove all indentations caused by python multiline strs
         index = header + body
-        index = index.splitlines()
-        index = [x.strip() for x in index]
-        index = "\n".join(index)
+        # index = index.splitlines()
+        # index = [x.strip() for x in index]
+        # index = "\n".join(index)
+
+        # print(index)
 
         return index
 
