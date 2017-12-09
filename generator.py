@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
 import argparse
 import boto3
+import sys
+import os
 
 
 class TemplateGenerator:
@@ -14,6 +17,8 @@ class TemplateGenerator:
         self.s3_website = "https://s3-{}.amazonaws.com/{}/".format(self.region, self.bucket)
         self.bucket_conn = self.s3_bucket()
         self.obj_dict = {}
+        # Only work in the specified output path
+        os.chdir(self.out_path)
         self.template_gen()
 
     def s3_bucket(self):
@@ -44,14 +49,62 @@ class TemplateGenerator:
                                                                        "obj_url": obj_url,
                                                                        "obj_thumb_url": obj_thumb_url})
                 except KeyError:
-                    self.obj_dict.update({obj_album: {"keys":[obj_key]}})
+                    self.obj_dict.update({obj_album: {"keys": [{obj_key: {"obj_full_path": obj_full_path},
+                                                                         "obj_url": obj_url,
+                                                                         "obj_thumb_url": obj_thumb_url}]}})
             else:
                 pass
 
-        return self.obj_dict
-
     def template_gen(self):
-        template_dict = self.parse_objects()
+        self.parse_objects()
+        for album in self.obj_dict:
+            if self.album_check(album):
+                # update_index()
+                print("Album {} found, not updating...".format(album))
+                pass
+            else:
+                index = self.make_index(album)
+                self.write_index_file(index)
+
+
+    def album_check(self, album):
+        """
+        Simple check to see if directory exists
+        :param album: album name
+        :return: True if directory exists; False if not
+        """
+        if os.path.isdir(album):
+            return True
+        else:
+            return False
+
+    def make_index(self, album):
+        """
+        Makes the index template for the album
+        :param album: key for the album in self.obj_dict
+        :return: Text template
+        """
+        albumthumb = self.obj_dict[album]["keys"][0]["obj_thumb_url"]
+        date = datetime.now().strftime("%Y-%m-%d")
+        header = """+++
+                albumthumb = \"{0}\"
+                date = \"{1}\"
+                title = \"{2}\"
+                +++""".format(albumthumb, date, album)
+        print(header)
+
+    def write_index_file(self, index):
+        """
+        Creates album directory if not exists, then writes the _index.md to disk
+        :param index: Text that needs to be in _index.md
+        :return: nothing
+        """
+        pass
+
+
+    # TODO: Need to implement update to index if I add additional pictures to albums
+    def update_index(self):
+        pass
 
 
 def main():
@@ -64,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument("bucket", help="s3 bucket to read from e.g. img.taylorm.cc")
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "ERROR", "CRITICAL"],
                         default="ERROR", help="Chose the loglevel from the available choices; default is ERROR.")
-    parser.add_argument("--output-path", default="pwd",
+    parser.add_argument("--output-path", default=os.getcwd(),
                         help="Choose the output directory, this would be the \"content\" directory.")
     parser.add_argument("--region", default="us-west-1",
                         help="Specify region so S3 full url is valid for object(s)")
