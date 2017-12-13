@@ -4,7 +4,6 @@ from datetime import datetime
 from textwrap import dedent
 import argparse
 import boto3
-import sys
 import os
 
 
@@ -61,25 +60,8 @@ class TemplateGenerator:
     def template_gen(self):
         self.parse_objects()
         for album in self.obj_dict:
-            if self.album_check(album):
-                # update_index()
-                print("Album {} found, not updating...".format(album))
-                pass
-            else:
-                index = self.make_index(album)
-                self.write_index_file(album, index)
-
-
-    def album_check(self, album):
-        """
-        Simple check to see if directory exists
-        :param album: album name
-        :return: True if directory exists; False if not
-        """
-        if os.path.isdir(album):
-            return True
-        else:
-            return False
+            index = self.make_index(album)
+            self.write_index_file(album, index)
 
     def make_index(self, album):
         """
@@ -103,13 +85,7 @@ class TemplateGenerator:
 
             body = body + add_body
 
-        # Need to remove all indentations caused by python multiline strs
         index = header + body
-        # index = index.splitlines()
-        # index = [x.strip() for x in index]
-        # index = "\n".join(index)
-
-        # print(index)
 
         return index
 
